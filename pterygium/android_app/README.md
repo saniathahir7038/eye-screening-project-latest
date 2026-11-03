@@ -7,10 +7,10 @@ See [USAGE.md](USAGE.md) for short, step-by-step instructions.
 ## Current module status
 
 - **Pterygium:** live on-device screening plus four labelled SLID sample tests.
-- **Keratoconus/SmartKC:** live Placido capture with on-device U-Net segmentation and an experimental ring-irregularity result, plus four reference sample tests with PPK, Sim-K, aCLMI and maps.
-- **Dry Eye/DEDector:** live Placido-video capture with immediate experimental NIBUT screening, plus a synthetic technical sample for decoding and failure-path testing.
+- **Keratoconus/SmartKC:** capture or choose a photo, detect rings and check positioning, then optionally generate experimental maps entirely on the phone. The numerical fit check flags weak results. Saved captures, desktop-map import and four saved reference examples are retained.
+- **Dry Eye/DEDector:** recorded or saved Placido video, ring localisation, blink-candidate timing, motion checks and an experimental ring-signal interval. This is not validated NIBUT or a dry-eye diagnosis. A synthetic sample tests the technical failure path.
 
-Version `0.5.0-hardware-rc` is an ARM64 hardware-validation build. SmartKC live decisions use a four-sample engineering threshold and do not yet reproduce the complete desktop reconstruction/PPK pipeline. The mobile Dry Eye analyser must still be compared against DEDector using genuine Placido videos. Both modules return an explicit inconclusive result when capture evidence is insufficient.
+Version `0.9.1-capture-consistency` is the current ARM64 research build. The on-device map path was exercised on a OnePlus 9R. Its distances are assumed, clinical accuracy is unknown, and low-consistency maps carry a retry warning. See [phone-map details](../../docs/PHONE-MAPS.md) and [capture-consistency evidence](../../docs/CAPTURE-CONSISTENCY.md). The mobile dry-eye implementation still needs a real-video phone test.
 
 ## Pterygium workflow
 

@@ -12,12 +12,22 @@ from get_center.get_center import segment_and_get_center
 # from crf import DenseCRF
 
 def undo_zoom(image, zoom_factor):
+    if not np.isfinite(zoom_factor) or zoom_factor < 1 or zoom_factor > 10:
+        raise ValueError("Capture zoom must be between 1 and 10")
     height, width = image.shape[:2]
-    # 4x zoom
-    image = cv2.resize(image, (width//zoom_factor, height//zoom_factor), interpolation=cv2.INTER_LINEAR)
-    image = cv2.copyMakeBorder(image.copy(),(height-height//zoom_factor)//2,(height-height//zoom_factor)//2,
-        (width-width//zoom_factor)//2,(width-width//zoom_factor)//2,cv2.BORDER_CONSTANT,value=[0,0,0])
-    return image, ((width-width//zoom_factor)//2, (height-height//zoom_factor)//2)
+    scaled_width, scaled_height = max(1, int(width / zoom_factor)), max(1, int(height / zoom_factor))
+    resized = cv2.resize(image, (scaled_width, scaled_height), interpolation=cv2.INTER_LINEAR)
+    left, top = (width-scaled_width)//2, (height-scaled_height)//2
+    image = cv2.copyMakeBorder(resized, top, height-scaled_height-top,
+        left, width-scaled_width-left, cv2.BORDER_CONSTANT, value=[0,0,0])
+    return image, (left, top)
+
+
+def project_marked_center(marked_center, width, height, zoom, offset):
+    # Round rather than truncate: normalized coordinates can land infinitesimally
+    # below an exact pixel after a JSON floating-point round trip.
+    return [int(round(marked_center[0]*width/zoom)) + offset[0],
+            int(round(marked_center[1]*height/zoom)) + offset[1]]
 
 
 def mouse_click(event, x, y, flags, param):
@@ -53,7 +63,9 @@ def preprocess_image(
     iso_dims=500,
     output_folder="out",
     center_selection="manual",
-    marked_center = None
+    marked_center = None,
+    capture_zoom=2.0,
+    anchor_marked_center=False,
 ):
     script_dir = os.path.dirname(__file__)
     # NOTE THIS EXPECTS THE INPUT IMAGE TO HAVE 3000x4000 RESOLUTION
@@ -64,12 +76,12 @@ def preprocess_image(
     image = cv2.imread(base_dir + "/" + image_name)
     height = image.shape[0]
     width = image.shape[1]
-    image, offset = undo_zoom(image, 2) # take zoom automatically from response/app
+    image, offset = undo_zoom(image, capture_zoom) # take zoom automatically from response/app
     image_name = image_name.split(".jpg")[0]
     
     # Translate marked center to pixels
     if(marked_center):
-        marked_center = [int(marked_center[0]*width)//2 + offset[0], int(marked_center[1]*height)//2 + offset[1]]
+        marked_center = project_marked_center(marked_center, width, height, capture_zoom, offset)
 
     # crop image to bring it to a reasonable size (1200 x 1200)
     image_crop = None
@@ -79,7 +91,13 @@ def preprocess_image(
     #     image_crop, marked_center_crop = crop_around_center(image, crop_dims=crop_dims, center=center, marked_center = marked_center)
     #     center = (image_crop.shape[1]//2, image_crop.shape[0]//2)
     # else:
-    image_crop, marked_center_crop = crop_around_center(image, crop_dims=crop_dims, marked_center = marked_center)
+    if anchor_marked_center and marked_center is not None:
+        cx = max(crop_dims[0]//2, min(width-crop_dims[0]//2, marked_center[0]))
+        cy = max(crop_dims[1]//2, min(height-crop_dims[1]//2, marked_center[1]))
+        image_crop, marked_center_crop = crop_around_center(image, crop_dims=crop_dims,
+                center=(cx,cy), marked_center=marked_center)
+    else:
+        image_crop, marked_center_crop = crop_around_center(image, crop_dims=crop_dims, marked_center=marked_center)
     
     # Step 3: Locate Image Center
     if center[0] == -1 and center[1] == -1:

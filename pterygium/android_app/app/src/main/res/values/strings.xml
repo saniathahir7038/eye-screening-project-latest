@@ -17,9 +17,9 @@
     <string name="dry_eye_module_description">Record a Placido-ring eye video to measure tear-film stability with DEDector.</string>
     <string name="open_dry_eye">Open Dry Eye module</string>
     <string name="dry_eye_title">Dry Eye screening</string>
-    <string name="dry_eye_intro">Capture a short Placido-ring video for Non-Invasive Break-Up Time testing.</string>
+    <string name="dry_eye_intro">Record or choose a short Placido eye video. The prototype checks for visible rings, a blink-like close-and-reopen signal and subsequent image-signal changes. It cannot diagnose dry eye.</string>
     <string name="dry_eye_test_setup">Before recording</string>
-    <string name="dry_eye_test_steps">1. Attach the Placido ring and turn on its light.\n2. Select the eye being recorded.\n3. Centre the reflected rings and keep them sharp.\n4. Ask the person to blink once, then comfortably keep the eye open.\n5. Record for up to 15 seconds. Stop immediately if uncomfortable.</string>
+    <string name="dry_eye_test_steps">Use the main rear camera and keep the reflected rings in view. Record about 15 seconds with a comfortable blink and a steady open-eye interval. Stop if uncomfortable; do not force the eye open. Motion, blur or missing rings may make the result inconclusive.</string>
     <string name="select_eye">Select eye</string>
     <string name="left_eye">Left eye</string>
     <string name="right_eye">Right eye</string>
@@ -28,14 +28,14 @@
     <string name="dry_eye_no_video">No video recorded yet.</string>
     <string name="dry_eye_video_ready">Video captured and ready to share for hardware validation.</string>
     <string name="dry_eye_video_description">Recorded Placido-ring eye video preview</string>
-    <string name="dry_eye_analysis_pending">Automated NIBUT processing is not enabled in this hardware-test build. No Dry Eye result is generated yet.</string>
+    <string name="dry_eye_analysis_pending">Choose or record a Placido video to analyse its experimental post-blink ring signal. This is not a dry-eye diagnosis.</string>
     <string name="dry_eye_capture_failed">The video could not be recorded. Check the camera and try again.</string>
     <string-array name="eye_sides">
         <item>Left eye</item>
         <item>Right eye</item>
     </string-array>
     <string name="keratoconus_foundation_title">Keratoconus screening</string>
-    <string name="keratoconus_foundation_body">Run a live Placido capture or verify the app with one of four included SmartKC samples.</string>
+    <string name="keratoconus_foundation_body">Check ring visibility, framing and image detail after each photo. Adjust your hold and repeat; calibration can be completed later.</string>
     <string name="keratoconus_hardware_note">These results replay previously generated SmartKC measurements. Live capture will be enabled after the on-device pipeline and Placido-ring calibration are tested.</string>
     <string name="back_to_modules">Back to modules</string>
     <string name="dataset_test">INTERNAL DATASET TEST</string>

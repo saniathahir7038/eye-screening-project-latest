@@ -38,3 +38,19 @@ desktop.ini
 shared/downloads/
 shared/gradle-dist/
 shared/gradle-home/
+smartkc/artifacts/
+
+# Private configuration and signing material
+*.keystore
+*.jks
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example
+**/google-services.json
+
+# Phone capture exports stay local
+*phone-maps-report*.zip
+eye-map-lab-test-report*.zip
+smartkc-????????-????-????-????-????????????.zip

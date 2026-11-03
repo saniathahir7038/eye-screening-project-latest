@@ -323,6 +323,9 @@ class corneal_top_gen:
         err2=0, skip_angles=[[-1, -1], [-1, -1]],
         center_selection="auto",
         marked_center = None,
+        capture_zoom=2.0,
+        measured_gap_top=None,
+        anchor_marked_center=False,
     ):
         self.skip_angles = skip_angles
   
@@ -350,7 +353,9 @@ class corneal_top_gen:
             iso_dims=iso_dims,
             output_folder=self.output,
             center_selection=center_selection,
-            marked_center=marked_center
+            marked_center=marked_center,
+            capture_zoom=capture_zoom,
+            anchor_marked_center=anchor_marked_center
         )
 
         mire_seg = mire_segmentation(mire_seg_method, center, Constants.DL_MODEL_FILE)
@@ -404,8 +409,12 @@ class corneal_top_gen:
         logging.info(f"Mire 20 radius - {mire_20_radius}")
 
         # mire_20_radius = np.nanmean(r_pixels[20][15:330])*2.0
-        if self.f_gap1 is not None:
+        if measured_gap_top is not None:
+            err1 = float(measured_gap_top)
+        elif self.f_gap1 is not None:
             err1 = self.f_gap1(1/mire_20_radius)
+        else:
+            raise ValueError("A measured gap correction or a validated distance-calibration curve is required")
 
         # get image real dimensions, account for upsampling
         h, w = cv2.imread(base_dir + "/" + image_name + ".jpg").shape[:2]

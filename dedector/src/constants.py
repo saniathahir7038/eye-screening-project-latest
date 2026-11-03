@@ -1,8 +1,10 @@
 # Author: Vaibhav Ganatra (t-vaganatra at microsoft dot com))
 
+from pathlib import Path
+
 class Constants:
     SAMPLES_PER_SECOND = 2
-    SEG_MODEL_PATH = "./mire_segmentation/segment_and_get_center_epoch_557_iter_14.pkl"
+    SEG_MODEL_PATH = str(Path(__file__).resolve().parent / "mire_segmentation" / "segment_and_get_center_epoch_557_iter_14.pkl")
     N_MIRES = 26
     JUMP = 0.5
     START_ANGLE = 0

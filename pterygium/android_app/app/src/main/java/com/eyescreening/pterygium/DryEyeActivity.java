@@ -38,6 +38,12 @@ public final class DryEyeActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private Uri capturedVideoUri;
     private boolean technicalSample;
+    private final ActivityResultLauncher<String[]> videoPicker=registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(),uri->{
+                if(uri==null)return;
+                try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(SecurityException ignored){}
+                capturedVideoUri=uri;technicalSample=false;showCapturedVideo();
+            });
     private final ExecutorService analysisExecutor = Executors.newSingleThreadExecutor();
 
     private final ActivityResultLauncher<Intent> videoCapture = registerForActivityResult(
@@ -78,6 +84,7 @@ public final class DryEyeActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             String savedUri = savedInstanceState.getString(STATE_VIDEO_URI);
             if (savedUri != null) {
+                technicalSample=savedInstanceState.getBoolean("technical_sample",false);
                 capturedVideoUri = Uri.parse(savedUri);
                 showCapturedVideo();
             }
@@ -86,12 +93,14 @@ public final class DryEyeActivity extends AppCompatActivity {
         findViewById(R.id.recordDryEyeVideoButton).setOnClickListener(
                 view -> recordVideo());
         findViewById(R.id.runDryEyeSampleButton).setOnClickListener(view -> runTechnicalSample());
+        findViewById(R.id.chooseDryEyeVideoButton).setOnClickListener(view -> videoPicker.launch(new String[]{"video/*"}));
         shareButton.setOnClickListener(view -> shareVideo());
         findViewById(R.id.backFromDryEyeButton).setOnClickListener(view -> finish());
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean("technical_sample",technicalSample);
         super.onSaveInstanceState(outState);
         if (capturedVideoUri != null) {
             outState.putString(STATE_VIDEO_URI, capturedVideoUri.toString());
@@ -133,7 +142,7 @@ public final class DryEyeActivity extends AppCompatActivity {
         videoPreview.setVisibility(View.VISIBLE);
         statusText.setText(technicalSample
                 ? "Synthetic technical sample loaded. Analysing failure handling..."
-                : "Video captured. Analysing the tear-film signal on this phone...");
+                : "Checking reflected rings, motion and the post-blink image signal...");
         shareButton.setVisibility(technicalSample ? View.GONE : View.VISIBLE);
         analyseVideo();
     }
@@ -148,11 +157,12 @@ public final class DryEyeActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         findViewById(R.id.recordDryEyeVideoButton).setEnabled(false);
         findViewById(R.id.runDryEyeSampleButton).setEnabled(false);
+        findViewById(R.id.chooseDryEyeVideoButton).setEnabled(false);
         Uri uri = capturedVideoUri;
         boolean sample = technicalSample;
         analysisExecutor.execute(() -> {
             DryEyeVideoAnalyzer.Result result = DryEyeVideoAnalyzer.analyse(this, uri);
-            runOnUiThread(() -> showAnalysis(result, sample));
+            runOnUiThread(() -> { if(!isFinishing()&&!isDestroyed())showAnalysis(result,sample); });
         });
     }
 
@@ -160,21 +170,22 @@ public final class DryEyeActivity extends AppCompatActivity {
         progressBar.setVisibility(View.GONE);
         findViewById(R.id.recordDryEyeVideoButton).setEnabled(true);
         findViewById(R.id.runDryEyeSampleButton).setEnabled(true);
+        findViewById(R.id.chooseDryEyeVideoButton).setEnabled(true);
         if (sample) {
             statusText.setText("Technical sample completed\n\n" + result.detail
                     + "\n\nExpected use: verify that a non-clinical video is rejected or marked inconclusive.");
             return;
         }
-        if (result.state == DryEyeVideoAnalyzer.State.INCONCLUSIVE) {
-            statusText.setText("Inconclusive - retake required\n\n" + result.detail);
-        } else if (result.state == DryEyeVideoAnalyzer.State.SUSPECTED) {
-            statusText.setText(String.format(Locale.US,
-                    "Possible tear-film instability - examination recommended\n\nExperimental NIBUT: %.1f seconds\n%s",
-                    result.nibutSeconds, result.detail));
+        String footer="\n\nResearch demonstration only. This image-signal method is not the full desktop DEDector implementation, clinically validated NIBUT, or a dry-eye diagnosis.";
+        if(result.state==DryEyeVideoAnalyzer.State.INCONCLUSIVE) {
+            statusText.setText("Inconclusive - no timing result\n\n"+result.detail+footer);
+        } else if(result.state==DryEyeVideoAnalyzer.State.EARLY_SIGNAL_CHANGE || result.state==DryEyeVideoAnalyzer.State.SIGNAL_CHANGE) {
+            statusText.setText(String.format(Locale.US,"%s\n\nExperimental post-blink ring-signal interval: %.2f seconds\nCandidate blink reopening: %.2f seconds into the recording\n%s%s",
+                    result.state==DryEyeVideoAnalyzer.State.EARLY_SIGNAL_CHANGE?"Early ring-signal change observed":"Ring-signal change observed",
+                    result.signalIntervalSeconds,result.blinkSeconds,result.detail,footer));
         } else {
-            statusText.setText(String.format(Locale.US,
-                    "No tear-film instability detected in this recording\n\nObserved after blink: at least %.1f seconds\n%s",
-                    result.nibutSeconds, result.detail));
+            statusText.setText(String.format(Locale.US,"No sustained ring-signal change observed\n\nObserved after candidate blink: at least %.2f seconds\n%s%s",
+                    result.signalIntervalSeconds,result.detail,footer));
         }
     }
 

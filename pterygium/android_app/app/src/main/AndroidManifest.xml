@@ -5,6 +5,7 @@
 
     <application
         android:allowBackup="false"
+        android:largeHeap="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
@@ -19,6 +20,7 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".KeratoconusActivity" />
         <activity android:name=".DryEyeActivity" />
+        <activity android:name=".PhoneMapsActivity" android:exported="false" android:configChanges="orientation|screenSize" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

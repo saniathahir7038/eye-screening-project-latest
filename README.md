@@ -22,8 +22,8 @@ eye-screening-project/
 ## Current status
 
 - One combined Android hardware-validation APK now provides live and bundled-sample paths for Pterygium, Keratoconus/SmartKC, and Dry Eye/DEDector.
-- SmartKC now runs the shared Placido U-Net on-device and reports capture validity plus an experimental ring-irregularity screening result.
-- Dry Eye now analyses a captured Placido video immediately and reports experimental NIBUT or a clear retake reason.
+- **Latest Android version: `0.9.1-capture-consistency`.** SmartKC runs ring segmentation, photo checks and optional corneal-map calculations on the phone. The OnePlus 9R preset uses explicitly assumed geometry. A new numerical fit check flags low-consistency maps and retains every attempt for debugging. The four-example disease-classifier candidate failed its audit and is not used for diagnosis. Source-linked desktop reconstruction and imported maps remain available.
+- Dry Eye accepts recorded or saved Placido video, checks for rings and motion, and reports an experimental post-blink ring-signal interval or an inconclusive result. This mobile image-signal implementation is not the full desktop DEDector pipeline, validated NIBUT or a dry-eye diagnosis.
 - See [the Android quick-use guide](pterygium/android_app/USAGE.md) for the current workflow and capability of each module.
 - The official SmartKC computer pipeline was run successfully on all four bundled sample images.
 - An offline SmartKC Android build mode was added because Microsoft's private Firebase configuration is not public.
@@ -47,3 +47,7 @@ Python environments, Android SDK files, generated builds, test recordings, APKs,
 ## Safety
 
 This is an academic research prototype, not a medical diagnostic system. Human testing and patient-image collection require appropriate consent, privacy protection, clinical supervision, and institutional ethics approval.
+
+### Offline phone maps and capture checks (0.9.1)
+
+The combined Android app includes an optional **Generate maps on this phone** action for saved original OnePlus 9R captures. See [phone-map workflow and validation](docs/PHONE-MAPS.md). Maps use explicitly assumed geometry and remain experimental. See [the three-capture comparison and fit-check limits](docs/CAPTURE-CONSISTENCY.md) for the current consistency checks.
