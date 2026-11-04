@@ -22,15 +22,15 @@ eye-screening-project/
 ## Current status
 
 - One combined Android hardware-validation APK now provides live and bundled-sample paths for Pterygium, Keratoconus/SmartKC, and Dry Eye/DEDector.
-- **Latest Android version: `0.9.1-capture-consistency`.** SmartKC runs ring segmentation, photo checks and optional corneal-map calculations on the phone. The OnePlus 9R preset uses explicitly assumed geometry. A new numerical fit check flags low-consistency maps and retains every attempt for debugging. The four-example disease-classifier candidate failed its audit and is not used for diagnosis. Source-linked desktop reconstruction and imported maps remain available.
-- Dry Eye accepts recorded or saved Placido video, checks for rings and motion, and reports an experimental post-blink ring-signal interval or an inconclusive result. This mobile image-signal implementation is not the full desktop DEDector pipeline, validated NIBUT or a dry-eye diagnosis.
+- **Latest Android version: `0.9.4-dry-eye-brightness-check`.** SmartKC runs ring segmentation, photo checks and optional corneal-map calculations on the phone. The OnePlus 9R preset uses explicitly assumed geometry. A new numerical fit check flags low-consistency maps and retains every attempt for debugging. The four-example disease-classifier candidate failed its audit and is not used for diagnosis. Source-linked desktop reconstruction and imported maps remain available.
+- Dry Eye accepts recorded or saved Placido video, follows small translations after a candidate blink, and reports an experimental ring-signal interval, a partial usable observation or an inconclusive result. See [tracking details and supplied-video replay](docs/DRY-EYE-TRACKING.md). This mobile image-signal implementation is not the full desktop DEDector pipeline, validated NIBUT or a dry-eye diagnosis.
 - See [the Android quick-use guide](pterygium/android_app/USAGE.md) for the current workflow and capability of each module.
 - The official SmartKC computer pipeline was run successfully on all four bundled sample images.
 - An offline SmartKC Android build mode was added because Microsoft's private Firebase configuration is not public.
 - The offline SmartKC debug APK builds successfully, but live decisions still require physical phone, desktop-parity and Placido-hardware validation.
 - The DEDector CLI and trained segmentation model load successfully on CPU.
 - DEDector invalid-video handling was hardened and covered by three passing tests.
-- Complete DEDector/mobile parity validation still requires a genuine mire-pattern eye video.
+- The dry-eye brightness guard and report export were confirmed on the OnePlus 9R using the supplied video; independent replay matched the phone result. All 116 Java tests passed. Complete DEDector/mobile parity and clinical accuracy remain unvalidated.
 - The Pterygium SLID audit, preprocessing, model training, locked evaluation, corrective validation iteration, Python interface, TensorFlow Lite export and standalone Android integration are complete. Physical-device and independent smartphone validation remain pending.
 
 ## Upstream projects

@@ -37,6 +37,7 @@ public final class DryEyeActivity extends AppCompatActivity {
     private Button shareButton;
     private ProgressBar progressBar;
     private Uri capturedVideoUri;
+    private File analysisReport;
     private boolean technicalSample;
     private final ActivityResultLauncher<String[]> videoPicker=registerForActivityResult(
             new ActivityResultContracts.OpenDocument(),uri->{
@@ -95,6 +96,7 @@ public final class DryEyeActivity extends AppCompatActivity {
         findViewById(R.id.runDryEyeSampleButton).setOnClickListener(view -> runTechnicalSample());
         findViewById(R.id.chooseDryEyeVideoButton).setOnClickListener(view -> videoPicker.launch(new String[]{"video/*"}));
         shareButton.setOnClickListener(view -> shareVideo());
+        findViewById(R.id.shareDryEyeReportButton).setOnClickListener(view -> shareReport());
         findViewById(R.id.backFromDryEyeButton).setOnClickListener(view -> finish());
     }
 
@@ -108,6 +110,8 @@ public final class DryEyeActivity extends AppCompatActivity {
     }
 
     private void recordVideo() {
+        analysisReport=null;
+        findViewById(R.id.shareDryEyeReportButton).setVisibility(View.GONE);
         try {
             File directory = new File(getCacheDir(), "captured-eye-videos");
             if (!directory.exists() && !directory.mkdirs()) {
@@ -138,11 +142,14 @@ public final class DryEyeActivity extends AppCompatActivity {
     }
 
     private void showCapturedVideo() {
+        analysisReport=null;
+        findViewById(R.id.shareDryEyeReportButton).setVisibility(View.GONE);
         videoPreview.setVideoURI(capturedVideoUri);
+        videoPreview.setOnPreparedListener(player -> { player.setLooping(false); videoPreview.seekTo(1); });
         videoPreview.setVisibility(View.VISIBLE);
         statusText.setText(technicalSample
                 ? "Synthetic technical sample loaded. Analysing failure handling..."
-                : "Checking reflected rings, motion and the post-blink image signal...");
+                : "Following the reflected rings and checking the usable video after a blink...");
         shareButton.setVisibility(technicalSample ? View.GONE : View.VISIBLE);
         analyseVideo();
     }
@@ -171,6 +178,8 @@ public final class DryEyeActivity extends AppCompatActivity {
         findViewById(R.id.recordDryEyeVideoButton).setEnabled(true);
         findViewById(R.id.runDryEyeSampleButton).setEnabled(true);
         findViewById(R.id.chooseDryEyeVideoButton).setEnabled(true);
+        analysisReport=result.reportZip;
+        findViewById(R.id.shareDryEyeReportButton).setVisibility(analysisReport!=null?View.VISIBLE:View.GONE);
         if (sample) {
             statusText.setText("Technical sample completed\n\n" + result.detail
                     + "\n\nExpected use: verify that a non-clinical video is rejected or marked inconclusive.");
@@ -179,14 +188,29 @@ public final class DryEyeActivity extends AppCompatActivity {
         String footer="\n\nResearch demonstration only. This image-signal method is not the full desktop DEDector implementation, clinically validated NIBUT, or a dry-eye diagnosis.";
         if(result.state==DryEyeVideoAnalyzer.State.INCONCLUSIVE) {
             statusText.setText("Inconclusive - no timing result\n\n"+result.detail+footer);
+        } else if(result.state==DryEyeVideoAnalyzer.State.PARTIAL_OBSERVATION) {
+            statusText.setText(String.format(Locale.US,"Partial observation - no reliable timing result\n\nRings followed for %.2f seconds after a candidate blink.\nCandidate blink reopening: %.2f seconds into the recording.\n%s\n\nAt least 10 continuous usable seconds are needed to report no sustained signal change. This short section cannot establish tear-film breakup time.%s",
+                    result.signalIntervalSeconds,result.blinkSeconds,result.detail,footer));
         } else if(result.state==DryEyeVideoAnalyzer.State.EARLY_SIGNAL_CHANGE || result.state==DryEyeVideoAnalyzer.State.SIGNAL_CHANGE) {
-            statusText.setText(String.format(Locale.US,"%s\n\nExperimental post-blink ring-signal interval: %.2f seconds\nCandidate blink reopening: %.2f seconds into the recording\n%s%s",
-                    result.state==DryEyeVideoAnalyzer.State.EARLY_SIGNAL_CHANGE?"Early ring-signal change observed":"Ring-signal change observed",
+            statusText.setText(String.format(Locale.US,"%s\n\nTime until image-signal change: %.2f seconds\nCandidate blink reopening: %.2f seconds into the recording\n%s%s",
+                    "Ring-signal change - cause unconfirmed",
                     result.signalIntervalSeconds,result.blinkSeconds,result.detail,footer));
         } else {
             statusText.setText(String.format(Locale.US,"No sustained ring-signal change observed\n\nObserved after candidate blink: at least %.2f seconds\n%s%s",
                     result.signalIntervalSeconds,result.detail,footer));
         }
+        if(result.reportError!=null)statusText.append("\n\nAnalysis report could not be saved ("+result.reportError+"). The analysis result above is retained.");
+        else if(analysisReport!=null)statusText.append("\n\nUse Share analysis report to send the frame checks for review. The ZIP contains eye-image previews.");
+    }
+
+    private void shareReport() {
+        if(analysisReport==null||!analysisReport.isFile())return;
+        Uri uri=FileProvider.getUriForFile(this,BuildConfig.APPLICATION_ID+".files",analysisReport);
+        Intent share=new Intent(Intent.ACTION_SEND);
+        share.setType("application/zip");share.putExtra(Intent.EXTRA_STREAM,uri);
+        share.setClipData(ClipData.newRawUri("Dry-eye analysis report",uri));
+        share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(Intent.createChooser(share,"Share analysis report"));
     }
 
     private void shareVideo() {

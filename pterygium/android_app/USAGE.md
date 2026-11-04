@@ -61,8 +61,9 @@ The maps use assumed distances. Passing the numerical fit check does not establi
 5. Ask the person to blink once, then comfortably keep the eye open.
 6. Record for 12 to 15 seconds. Stop immediately if the person is uncomfortable.
 7. End the recording. Analysis starts automatically.
-8. Review the experimental ring-signal result or follow the inconclusive/retake reason.
-9. Use **Share test video** to preserve the original video for comparison with the desktop DEDector pipeline.
+8. Review the experimental ring-signal result, partial observation or inconclusive reason. A partial observation shows how long the image remained usable and where tracking or brightness checks stopped it; it is not a breakup-time measurement.
+9. Use **Share analysis report** to send the measured crops and frame checks for debugging. The report contains eye images and stays local until you share it.
+10. Use **Share test video** to preserve the original video for comparison with the desktop DEDector pipeline.
 
 The reported interval is an experimental image-signal measurement after a detected blink candidate. It is not a measured/validated NIBUT value or a disease diagnosis. An unreadable or insufficient capture returns **Inconclusive**.
 

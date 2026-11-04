@@ -52,4 +52,34 @@ public class TearSignalTimelineTest {
         TearSignalTimeline.Result result=TearSignalTimeline.analyse(t,m,e);
         assertEquals(TearSignalTimeline.Kind.CHANGE,result.kind);assertEquals(3.9,result.intervalSeconds,1e-9);
     }
+    private boolean[] tracked() { boolean[] good=new boolean[64];java.util.Arrays.fill(good,true);return good; }
+    @Test public void lostTrackingProducesPartialObservationNotBreakup() {
+        boolean[] good=tracked();good[20]=false;
+        double[] e=edges();for(int i=20;i<e.length;i++)e[i]=7;
+        TearSignalTimeline.Result r=TearSignalTimeline.analyse(times(),means(),e,good);
+        assertEquals(TearSignalTimeline.Kind.PARTIAL_OBSERVATION,r.kind);assertEquals(3.5,r.intervalSeconds,1e-9);
+        assertTrue(r.detail.contains("5.00 seconds"));
+    }
+    @Test public void trackingLossDuringBaselineCannotStartATimer() {
+        boolean[] good=tracked();good[7]=false;
+        assertEquals(TearSignalTimeline.Kind.INCONCLUSIVE,TearSignalTimeline.analyse(times(),means(),edges(),good).kind);
+    }
+    @Test public void goodSectionsAreNotJoinedAcrossTrackingLoss() {
+        boolean[] good=tracked();good[20]=false;
+        assertEquals(TearSignalTimeline.Kind.PARTIAL_OBSERVATION,TearSignalTimeline.analyse(times(),means(),edges(),good).kind);
+    }
+    @Test public void tenUsableSecondsCanBeReportedBeforeLaterLoss() {
+        boolean[] good=tracked();good[50]=false;
+        TearSignalTimeline.Result r=TearSignalTimeline.analyse(times(),means(),edges(),good);
+        assertEquals(TearSignalTimeline.Kind.NO_CHANGE_OBSERVED,r.kind);assertEquals(11,r.intervalSeconds,1e-9);
+    }
+    @Test public void lossBeforeSustainedConfirmationCannotCreateAnEvent() {
+        boolean[] good=tracked();good[21]=false;
+        double[] e=edges();for(int i=20;i<e.length;i++)e[i]=7;
+        assertEquals(TearSignalTimeline.Kind.PARTIAL_OBSERVATION,TearSignalTimeline.analyse(times(),means(),e,good).kind);
+    }
+    @Test public void shortTrackedVideoReportsAvailableSectionWithoutCallingItBreakup() {
+        TearSignalTimeline.Result r=TearSignalTimeline.analyse(java.util.Arrays.copyOf(times(),25),java.util.Arrays.copyOf(means(),25),java.util.Arrays.copyOf(edges(),25),java.util.Arrays.copyOf(tracked(),25));
+        assertEquals(TearSignalTimeline.Kind.PARTIAL_OBSERVATION,r.kind);assertEquals(4.75,r.intervalSeconds,1e-9);
+    }
 }
